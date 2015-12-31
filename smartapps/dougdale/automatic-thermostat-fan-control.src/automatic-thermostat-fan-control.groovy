@@ -81,7 +81,10 @@ def temperatureCheck() {
     
     log.debug "Fan mode ${fanMode}"
     
-    thermostat.setThermostatFanMode(fanMode)
+    if (thermostat.currentFanMode != fanMode) {
+    	log.debug "Fan mode changed"
+    	thermostat.setThermostatFanMode(fanMode)
+    }
 
 	// Do this check every 30 minutes
 	runIn(30*60, temperatureCheck)
