@@ -25,8 +25,8 @@ definition(
 
 
 preferences {
-    section("Choose thermostat(s)") {
- 		input "thermostat", "capability.thermostat", multiple: true
+    section("Choose thermostat") {
+ 		input "thermostat", "capability.thermostat"
     }
     section("Choose temperature sensor(s)") {
     	input "tempsensors", "capability.temperatureMeasurement", multiple: true
@@ -63,19 +63,27 @@ def initialize() {
 // Event handler
 def temperatureCheck() {
 	def tempInfo = tempsensors.currentTemperature
-//    def setpoint = thermostat.currentSetPoint
-//    def fanMode = "auto"
+    def setpoint = thermostat.currentThermostatSetpoint
+    def fanMode = "auto"
     
+    log.debug "Setpoint ${setpoint}"
+    
+    // Check the temp at each sensor. If any of the sensors are past the thresholds or the delta
+    // from the thermostat setpooint is to big, set the thermostat state to "on".
     tempInfo.each { temp -> 
         log.debug "Temp ${temp}"
-//    	if (temp > maxtemp || temp < mintemp || abs(temp - setpoint) > tempdelta) {
-//        	log.debug "See temp of ${temp} (setpoint ${setpoint}). Turning fan on."
-//            fanMode = "on"
-//        }
+        
+    	if (temp > maxtemp || temp < mintemp || ((int)temp - (int)setpoint).abs() > tempdelta) {
+        	log.info "Sensor temp of ${temp} (setpoint ${setpoint}). Turning fan on."
+            fanMode = "on"
+        }
     }
     
-//    thermostat.setThermostatFanMode(fanMode)
+    log.debug "Fan mode ${fanMode}"
+    
+    thermostat.setThermostatFanMode(fanMode)
 
-	runIn(60, temperatureCheck)
+	// Do this check every 30 minutes
+	runIn(30*60, temperatureCheck)
 }
 
